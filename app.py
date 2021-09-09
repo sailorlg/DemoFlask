@@ -11,8 +11,8 @@ app = ConfigDemo(app).app  # 读入全局配置变量
 def index():
     return "<H1>Hello, World!</H1>"
 
-@app.route("/hi", method=['GET', 'POST'])
-@app.route("/hello", method=['GET', 'POST'])
+@app.route("/hi", methods=['GET', 'POST'])
+@app.route("/hello", methods=['GET', 'POST'])
 def say_hello():
     """
     Function:获取从浏览器传过来的参数name的值, 并显示
