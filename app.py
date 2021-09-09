@@ -11,8 +11,8 @@ app = ConfigDemo(app).app  # 读入全局配置变量
 def index():
     return "<H1>Hello, World!</H1>"
 
-@app.route("/hi")
-@app.route("/hello")
+@app.route("/hi", method=['GET', 'POST'])
+@app.route("/hello", method=['GET', 'POST'])
 def say_hello():
     """
     Function:获取从浏览器传过来的参数name的值, 并显示
@@ -21,9 +21,12 @@ def say_hello():
     print(request)
     print(request.args)
 
-    v_name = request.args.get('name')
-    if v_name is None:  # 如果浏览器没有数据name的值
-        v_name = "Nobody"
+    # v_name = request.args.get('name')
+    # if v_name is None:  # 如果浏览器没有数据name的值
+    #     v_name = "Nobody"
+
+    v_name = request.args.get('name', 'Nobidy')  # 等价于上面的代码
+
 
     return "<H1>Say Hello to {}!</H1>".format(v_name)
 
