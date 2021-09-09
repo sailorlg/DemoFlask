@@ -59,3 +59,16 @@ def get_demo_name():
     """
     v_demo_name = app.config['DEMO_NAME']
     click.echo(v_demo_name)
+
+
+@app.route("/goback/<int:year>")
+def go_back(year):
+    v_now = year
+    v_atfer_year = 2021 + year
+    return "Welcome to atfer %d years, Now is %d." % (v_now, v_atfer_year)
+
+
+colors = ['blue', 'white', 'red']
+@app.route("/color/<any(%s):color>"%str(colors)[1:-1])
+def any_colors(color):
+    return "<H1><font color=%s>Welcome</font></H1>"%color
