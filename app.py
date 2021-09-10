@@ -1,5 +1,5 @@
 
-from flask import Flask, url_for, request
+from flask import Flask, url_for, request, redirect
 import click
 
 from ConfigDemo import ConfigDemo
@@ -72,3 +72,21 @@ colors = ['blue', 'white', 'red']
 @app.route("/color/<any(%s):color>"%str(colors)[1:-1])
 def any_colors(color):
     return "<H1><font color=%s>Welcome</font></H1>"%color
+
+
+@app.route("/redirect")
+def redirect_goto():
+    """
+    Function:测试重定向功能
+    :return:
+    """
+    print("app.py => redirect_to ")
+
+    # 方法1
+    # return "", 302, {"Location": "HTTP://www.imarketchina.net"}
+
+    # 方法2
+    # return redirect("http://bbs.fengniao.com")
+
+    # 方法3
+    return redirect(url_for("say_hello"))
