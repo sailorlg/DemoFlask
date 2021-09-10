@@ -1,11 +1,12 @@
 
-from flask import Flask, url_for, request, redirect
+from flask import Flask, url_for, request, redirect, make_response, json, jsonify
 import click
 
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
+
 
 @app.route("/")
 def index():
@@ -16,6 +17,7 @@ def index():
 def say_hello():
     """
     Function:获取从浏览器传过来的参数name的值, 并显示
+             从cookie中获取值
     :return:
     """
     print(request)
@@ -24,9 +26,11 @@ def say_hello():
     # v_name = request.args.get('name')
     # if v_name is None:  # 如果浏览器没有数据name的值
     #     v_name = "Nobody"
+    # v_name = request.args.get('name', 'Nobody')  # 等价于上面的代码
 
-    v_name = request.args.get('name', 'Nobidy')  # 等价于上面的代码
-
+    v_name = request.args.get('name')  # 从浏览器的URL中获取name值
+    if v_name is None:
+        v_name = request.cookies.get('name', 'COOKIE')
 
     return "<H1>Say Hello to {}!</H1>".format(v_name)
 
@@ -60,19 +64,16 @@ def get_demo_name():
     v_demo_name = app.config['DEMO_NAME']
     click.echo(v_demo_name)
 
-
 @app.route("/goback/<int:year>")
 def go_back(year):
     v_now = year
     v_atfer_year = 2021 + year
     return "Welcome to atfer %d years, Now is %d." % (v_now, v_atfer_year)
 
-
 colors = ['blue', 'white', 'red']
 @app.route("/color/<any(%s):color>"%str(colors)[1:-1])
 def any_colors(color):
     return "<H1><font color=%s>Welcome</font></H1>"%color
-
 
 @app.route("/redirect")
 def redirect_goto():
@@ -90,3 +91,48 @@ def redirect_goto():
 
     # 方法3
     return redirect(url_for("say_hello"))
+
+@app.route("/contenttype/<type>")
+def return_requested_type(type):
+    """
+    Function:相应格式测试
+             测试cookie
+    :param type:
+    :return:
+    """
+
+    if type.upper() == "JSON":
+        # 方法1
+        # v_data = {"name":"ZhangSan",
+        #           "Job": "Student"}
+        # response = make_response(json.dumps(v_data))
+        # response.mimetype = "application/json"
+        # return response
+        v_data = {"name":"ZhangSan",
+                  "Job": "Student"}
+        response = jsonify(v_data)
+    elif type.upper() == "HTML":
+        v_data = "<!DOCTYPE html>" \
+                 "<html>" \
+                 "<head></head>" \
+                 "<body>" \
+                 "    <H1>Note</H1>" \
+                 "    <p>To: Jane</p>" \
+                 "    <p><font color=red>Content: I LOVE YOU</font></p>" \
+                 "</body>" \
+                 "</html>"
+        response = make_response(v_data)
+        response.mimetype = "text/html"
+
+    else:
+        response = jsonify(message="HTML or JSON"), 500
+
+    response.set_cookie('name', type)
+
+    return response
+
+@app.route("/set/<name>")
+def set_cookie(name):
+    response = make_response(redirect(url_for("say_hello")))
+    response.set_cookie("name", name)
+    return response
