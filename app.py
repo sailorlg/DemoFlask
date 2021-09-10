@@ -168,3 +168,19 @@ def logout():
     if 'logged_in' in session:
         session.pop('logged_in')
     return redirect(url_for('say_hello'))
+
+@app.route("/goods")
+def goods_page():
+    return "<H1>Goods Page</H1><a href='%s'> Do Something</a>" % url_for('do_something')
+
+@app.route("/oders")
+def orders_page():
+    return "<H1>Orders Page</H1><a href='%s'> Do Something</a>" % url_for('do_something')
+
+@app.route("/do-something")
+def do_something():
+    """
+    Function:测试重定向功能
+    :return:
+    """
+    return redirect(url_for("say_hello"))
