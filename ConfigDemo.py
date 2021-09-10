@@ -1,3 +1,6 @@
+
+import os
+
 from flask import Flask
 
 class ConfigDemo():
@@ -12,6 +15,7 @@ class ConfigDemo():
         :return:
         """
         self.app.config['DEMO_NAME'] = "FlaskDemo"
+        self.app.secret_key = os.getenv('SECURITY_KEY')
 
 
 

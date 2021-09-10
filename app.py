@@ -1,5 +1,7 @@
 
-from flask import Flask, url_for, request, redirect, make_response, json, jsonify
+import os
+
+from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort
 import click
 
 from ConfigDemo import ConfigDemo
@@ -18,6 +20,7 @@ def say_hello():
     """
     Function:获取从浏览器传过来的参数name的值, 并显示
              从cookie中获取值
+             从session中取值
     :return:
     """
     print(request)
@@ -32,7 +35,14 @@ def say_hello():
     if v_name is None:
         v_name = request.cookies.get('name', 'COOKIE')
 
-    return "<H1>Say Hello to {}!</H1>".format(v_name)
+    response =  "<H1>Say Hello to {}!</H1>".format(v_name)
+
+    # 根据用户认证状态返回不同的值
+    if 'logged_in' in session:
+        response += '[Authenticated]'
+    else:
+        response += "UN-Authenticated"
+    return response
 
 @app.route("/greet/", defaults={"name": "Programmer"})
 @app.route("/greet/<name>")
@@ -136,3 +146,25 @@ def set_cookie(name):
     response = make_response(redirect(url_for("say_hello")))
     response.set_cookie("name", name)
     return response
+
+@app.route("/login")
+def login():
+    """
+    Function: 设置session
+    :return:
+    """
+    session['logged_in'] = True  # 写入session
+    return redirect(url_for('say_hello'))
+
+
+@app.route("/admin")
+def admin():
+    if 'logged_in' not in session:
+        abort("403")
+    return "<H1>WELCOME</H1>"
+
+@app.route("/logout")
+def logout():
+    if 'logged_in' in session:
+        session.pop('logged_in')
+    return redirect(url_for('say_hello'))
