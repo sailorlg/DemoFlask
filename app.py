@@ -1,7 +1,8 @@
 
 import os
 
-from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort
+from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g
+from urllib.parse import urlparse, urljoin
 import click
 
 from ConfigDemo import ConfigDemo
@@ -97,10 +98,10 @@ def redirect_goto():
     # return "", 302, {"Location": "HTTP://www.imarketchina.net"}
 
     # 方法2
-    # return redirect("http://bbs.fengniao.com")
+    return redirect("http://bbs.fengniao.com")
 
     # 方法3
-    return redirect(url_for("say_hello"))
+    # return redirect(url_for("say_hello"))
 
 @app.route("/contenttype/<type>")
 def return_requested_type(type):
@@ -171,11 +172,13 @@ def logout():
 
 @app.route("/goods")
 def goods_page():
-    return "<H1>Goods Page</H1><a href='%s'> Do Something</a>" % url_for('do_something')
+    return "<H1>Goods Page</H1><a href='%s'> Do Something</a>" % \
+           url_for('do_something', next=request.full_path)
 
 @app.route("/oders")
 def orders_page():
-    return "<H1>Orders Page</H1><a href='%s'> Do Something</a>" % url_for('do_something')
+    return "<H1>Orders Page</H1><a href='%s'> Do Something</a>" % \
+           url_for('do_something', next=request.full_path)
 
 @app.route("/do-something")
 def do_something():
@@ -183,4 +186,43 @@ def do_something():
     Function:测试重定向功能
     :return:
     """
+    # return redirect(url_for("say_hello"))
+    print("Now, going back - step 01")
+    return redirect_goback()
+
+def redirect_goback(default_page='demoname', **kwargs):
+    print("Now, going back - step 02")
+    for target in request.args.get("next"), request.referrer:
+        print("redirect_goback => ", target)
+        if not target:
+            print("redirect_goback => continue")
+            continue
+        if is_safe_url(target):
+            return redirect(target)
+    return redirect(url_for(default_page, **kwargs))
+
+@app.route("/logout")
+def log_out_function():
+    """
+    Function: 测试退出功能
+    :return:
+    """
+    if "logged_in" in session:
+        session.pop("logged_in")
     return redirect(url_for("say_hello"))
+
+@app.before_request
+def get_name():
+    g.name = request.args.get('name')
+    print(g.name)
+
+def is_safe_url(target):
+    """
+    Function: 判断跳转的目标URL是不是安全的.
+    :param target:
+    :return:
+    """
+    print("is_safe_url => ", target)
+    rer_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ("http", "https") and rer_url.netloc == test_url.netloc
