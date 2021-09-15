@@ -231,7 +231,7 @@
 
 import os
 from jinja2.utils import generate_lorem_ipsum, escape
-from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, render_template
+from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, render_template, Markup
 from urllib.parse import urlparse, urljoin
 import click
 
@@ -306,3 +306,45 @@ def f_watchlist():
         {"name": "CoCo", "year": "2017"},
     ]
     return render_template('watchlist.html', user=v_user, movies=v_movies)
+
+
+@app.route("/")
+def index_view():
+    """
+
+    :return:
+    """
+    return render_template('index.html', foo="ImFoo", name="baz")
+
+
+@app.template_filter()
+def musicals(s):
+    """
+    Function: 注册自定义的过滤器
+              在给定字符串后面加上音乐符号
+    :param s:
+    :return:
+    """
+    return s + Markup('&#9835;')
+
+
+@app.template_global()
+def bar():
+    """
+    Function: 注册全局对象
+              返回字符串
+    :return:
+    """
+    return "I am bar() function."
+
+
+@app.template_test()
+def baz(n):
+    """
+    Function: 注册自定义测试器
+    :param n:
+    :return:
+    """
+    if n == "baz":
+        return True
+    return False

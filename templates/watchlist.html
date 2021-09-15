@@ -5,7 +5,7 @@
     <title>{{user.username}}'s WatchList</title>
 </head>
 <body>
-<a href="{{url_for("hello_function")}}"> &larr; Return</a>
+<a href="{{url_for("index_view")}}">Return</a>
 <h2>{{user.username}}</h2>
 {% if user.bio %}
     <i>{{user.bio}}</i>
