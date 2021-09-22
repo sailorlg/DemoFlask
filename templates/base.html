@@ -1,24 +1,45 @@
+
+{% from 'macros.html' import static_file %}
+
 <!DOCTYPE html>
 <html>
 <head>
     {% block head %}
         <meta charset="UTF-8">
         <title>{% block title %}Template - HelloFlask{% endblock title %}</title>
-        {% block styles %}{% endblock styles %}
+        {% block styles %}
+            {{ static_file('css','css/bootstrap.min.css') }}
+            <!--
+            <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+            -->
+        {% endblock styles %}
+            <link rel="icon" type="image/x-icon" href="{{url_for('static', filename='favico.ico')}}">
     {% endblock head %}
 </head>
 <body>
 <nav>
-    <ul><li><a href="{{ url_for('index_view') }}">Home</a> </li></ul>
+    <ul>
+        <li>
+            <img src="{{url_for('static', filename='dancer.jpg')}}" width="50">
+            <a href="{{ url_for('index_view') }}">Home</a>
+        </li>
+    </ul>
 </nav>
 <main>
-    {% block content %} {% endblock content %}
+    {% for a_message in get_flashed_messages() %}
+        <div class="alert">{{a_message}}</div>
+    {% endfor %}
+    {% block content %}{% endblock content %}
 </main>
 <footer>
     {% block footer %}
     <p>You will luck!</p>
     {% endblock footer %}
 </footer>
-{% block scripts %} {% endblock %}
+{% block scripts %}
+    {{ static_file('js','js/jquery-3.6.0.js') }}
+    {{ static_file('js','js/jquery-3.6.0.js') }}
+    {{ static_file('js','js/bootstrap.min.js') }}
+{% endblock %}
 </body>
 </html>

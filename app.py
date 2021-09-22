@@ -231,7 +231,8 @@
 
 import os
 from jinja2.utils import generate_lorem_ipsum, escape
-from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, render_template, Markup
+from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, \
+    render_template, Markup, flash
 from urllib.parse import urlparse, urljoin
 import click
 
@@ -348,3 +349,20 @@ def baz(n):
     if n == "baz":
         return True
     return False
+
+
+@app.route("/flash")
+def display_flash():
+    """
+    Function: 设置flash内容后, 跳转到索引页面
+              在索引页面中读取flash内容后显示
+    :return:
+    """
+    flash("I am flash, Only Flash!")
+    flash("Second Flash!")
+    return redirect(url_for("index_view"))
+
+
+@app.errorhandler(404)
+def page_not_found (e):
+    return render_template('errors/404.html'), 404

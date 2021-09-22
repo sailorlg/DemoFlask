@@ -19,5 +19,6 @@
     <li>Global: {{ bar() }}</li>
     <li>Test: {% if name is baz %} I am baz. {% endif %}</li>
     <li>Macro: {{ qux(amount=5) }}</li>
+    <li><a href="{{ url_for('display_flash')}}">Display Flash</a></li>
 </ul>
 {% endblock content %}
