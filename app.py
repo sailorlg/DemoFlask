@@ -236,6 +236,7 @@ from flask import Flask, url_for, request, redirect, make_response, json, jsonif
 from urllib.parse import urlparse, urljoin
 import click
 
+from form.forms import LoginForm  # 导入form文件夹下form.py文件的LoginForm类
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
@@ -366,3 +367,9 @@ def display_flash():
 @app.errorhandler(404)
 def page_not_found (e):
     return render_template('errors/404.html'), 404
+
+
+@app.route("/basic")
+def basic():
+    form = LoginForm()
+    return render_template('basic.html', form=form)
