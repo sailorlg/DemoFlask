@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import form_field %}  <!-- 导入宏 -->
+
+{% block styles %}
+    {{ static_file('css','css/bootstrap.min.css') }}
+{% endblock styles %}
+
+{% block content %}
+<!--
+Function: 演示自定义验证器,全局验证器
+Chapter: 4.4.3_2
+-->
+<form method="post">
+    {{ form.csrf_token }}
+    <div class="form-group">
+        {{ form.name.label }} {{ form.name }} <br>
+        {% for message in form.name.errors %}
+            <small class="alert-warning"><font size="3" color="red">{{ message }}</font></small><br>
+        {% endfor %}
+    </div>
+    {{ form.submit(class='btn btn-primary') }}<br>
+</form>
+
+{% endblock content %}

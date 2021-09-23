@@ -236,7 +236,7 @@ from flask import Flask, url_for, request, redirect, make_response, json, jsonif
 from urllib.parse import urlparse, urljoin
 import click
 
-from form.forms import LoginForm  # 导入form文件夹下form.py文件的LoginForm类
+from form.forms import LoginForm, AskAgeForm, AskNameForm  # 导入form文件夹下form.py文件的LoginForm类
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
@@ -382,3 +382,29 @@ def basic():
         flash("Welcome, %s" % username)
         return redirect(url_for("index_view"))
     return render_template('basic.html', form=form)
+
+
+@app.route("/age", methods=['GET', 'POST'])
+def ask_age():
+    """
+    Function: 演示自定义验证器
+    Chapter: 4.4.3_1
+    :return:
+    """
+    form = AskAgeForm()
+    if form.validate_on_submit():
+        print("app.py => ask_age : runnging ")
+    return render_template('age.htm', form=form)
+
+
+@app.route("/yourname", methods=['GET', 'POST'])
+def ask_name():
+    """
+    Function: 演示自定义验证器, 全局验证器
+    Chapter: 4.4.3_2
+    :return:
+    """
+    form = AskNameForm()
+    if form.validate_on_submit():
+        print("app.py => ask_name : runnging ")
+    return render_template('name.html', form=form)
