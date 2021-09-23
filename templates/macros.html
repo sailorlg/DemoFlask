@@ -18,3 +18,28 @@
         <link rel="icon" href="{{filename_or_url}}">
     {% endif %}
 {% endmacro %}
+
+
+<!--
+Function:创建一个宏来渲染表单字段
+Chapter: 4.4.2
+-->
+{% macro form_field(field, position) %}
+    {% if position == 'BEFORE' %}  <!-- position参数: 确定label的位置 -->
+        {{ field.label }}
+        {{ field(**kwargs) }}<br>
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <small class="error">{{error}}</small>
+            {% endfor %}
+        {% endif %}
+    {% else %}
+        {{ field(**kwargs) }}
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <small class="error">{{error}}</small>
+            {% endfor %}
+        {% endif %}
+        {{ field.label }}<br>
+    {% endif %}
+{% endmacro %}

@@ -2,6 +2,7 @@
 import os
 
 from flask import Flask
+from flask_wtf import FlaskForm
 
 class ConfigDemo():
     """这个类是用于配置Flask的全局变量"""
@@ -16,6 +17,9 @@ class ConfigDemo():
         """
         self.app.config['DEMO_NAME'] = "FlaskDemo"
         self.app.secret_key = os.getenv('SECURITY_KEY')
+
+        # 把WTF_I18N_ENABLED设置为False, 会让Flask-WTF使用内置的错误消息翻译
+        self.app.config['WTF_I18N_ENABLED'] = False
 
 
 

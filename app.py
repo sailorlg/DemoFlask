@@ -316,6 +316,7 @@ def index_view():
 
     :return:
     """
+    print("app.py => index_view : running")
     return render_template('index.html', foo="ImFoo", name="baz")
 
 
@@ -369,7 +370,15 @@ def page_not_found (e):
     return render_template('errors/404.html'), 404
 
 
-@app.route("/basic")
+@app.route("/basic", methods=['GET', 'POST'])
 def basic():
-    form = LoginForm()
+    print("app.py => basic : running ")
+    form = LoginForm()  # GET + POST
+    print("app.py => basic : get form")
+    if form.validate_on_submit():
+        print("app.py => basic : form has been checked!")
+        username = form.username.data
+        print("app.py => basic => username : " + username)
+        flash("Welcome, %s" % username)
+        return redirect(url_for("index_view"))
     return render_template('basic.html', form=form)
