@@ -232,11 +232,12 @@
 import os
 from jinja2.utils import generate_lorem_ipsum, escape
 from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, \
-    render_template, Markup, flash
+    render_template, Markup, flash, send_from_directory
 from urllib.parse import urlparse, urljoin
 import click
+import uuid
 
-from form.forms import LoginForm, AskAgeForm, AskNameForm  # 导入form文件夹下form.py文件的LoginForm类
+from form.forms import LoginForm, AskAgeForm, AskNameForm, UploadSingleImageForm  # 导入form文件夹下form.py文件的LoginForm类
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
@@ -408,3 +409,60 @@ def ask_name():
     if form.validate_on_submit():
         print("app.py => ask_name : runnging ")
     return render_template('name.html', form=form)
+
+
+@app.route("/uploadimage", methods=['GET', 'POST'])
+def upload_single_image():
+    """
+    Function:演示上传文件(图片),一个文件
+    Chapter: 4.4.4_1~3
+    :return:
+    """
+    form = UploadSingleImageForm()
+    if form.validate_on_submit():
+        image_file = form.image.data  # 获取图片文件
+        image_file_name = random_filename(image_file.filename)  # 获取图片文件名字后转换成随机的名字
+        print("app.py => upload_single_image => image_file_name : " + image_file_name)
+        image_file.save(os.path.join(app.config['UPLOAD_PATH'], image_file_name))  # 保存图片文件
+        flash('Upload Success!')
+        session['image_file_name'] = [image_file_name]  # 把图片文件名字保存到session中
+
+        return redirect(url_for("show_images"))  # 重定向到指定show_images视图函数对应的URL, 这种方式会打开另一个页面
+
+    return render_template("upload_one_image.html", form=form)
+
+
+def random_filename(filename):
+    """
+    Function: 演示上传文件(图片)
+              根据上传的文件名字, 生成随机的文件名字
+    :param filename:
+    :return:
+    """
+    ext_name = os.path.splitext(filename)[1]
+    new_filename = uuid.uuid4().hex + ext_name
+    return new_filename
+
+
+@app.route("/images/<path:filename>")
+def get_file(filename):
+    """
+    Function:
+    Chapter: 4.4.4_1~3
+    :param file_name:
+    :return:
+    """
+    print("app.py => upload_single_image => get_file => filename : " + filename)
+    return send_from_directory(app.config['UPLOAD_PATH'], filename)
+
+
+@app.route("/images")
+def show_images():
+    """
+    Function:显示上传的图片
+    Chapter: 4.4.4_1~3
+    :return:
+    """
+    print("app.py => show_images : running")
+    image_name = session['image_file_name']  # 从session中去除图片文件名
+    return render_template('show_images.html', filename=image_name)

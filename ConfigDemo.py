@@ -21,6 +21,8 @@ class ConfigDemo():
         # 把WTF_I18N_ENABLED设置为False, 会让Flask-WTF使用内置的错误消息翻译
         self.app.config['WTF_I18N_ENABLED'] = False
 
+        # 上传图片文件后保存的路径
+        self.app.config['UPLOAD_PATH'] = os.path.join(self.app.root_path, 'uploadedimages')
 
 
 

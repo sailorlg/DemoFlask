@@ -15,7 +15,7 @@ Chapter: 4.4.3_2
     <div class="form-group">
         {{ form.name.label }} {{ form.name }} <br>
         {% for message in form.name.errors %}
-            <small class="alert-warning"><font size="3" color="red">{{ message }}</font></small><br>
+            <small class="alert-warning"><font color="red">{{ message }}</font></small><br>
         {% endfor %}
     </div>
     {{ form.submit(class='btn btn-primary') }}<br>

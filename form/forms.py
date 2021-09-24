@@ -1,6 +1,12 @@
 from flask_wtf import FlaskForm
+
+# 4.4.4_1~3
+# 为了文件上传我们使用扩展Flask-WTF提供的FileField类, 他继承自WTForms提供的上传字段FileField, 添加了Flask的继承
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Length, ValidationError
+
 
 class MyBaseForm(FlaskForm):
     class Meta:
@@ -81,3 +87,13 @@ class AskNameForm(MyBaseForm):
     """
     name = StringField("Username", validators=[check_name()])
     submit = SubmitField("PutMyName")
+
+
+class UploadSingleImageForm(FlaskForm):
+    """
+    Function: 演示上传单个图片文件
+    Chapter: 4.4.4_1~3
+    """
+    description = StringField("Introduce")
+    image = FileField("Upload Beautify", validators=[FileRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    submit = SubmitField("GO")
