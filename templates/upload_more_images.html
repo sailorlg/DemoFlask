@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import form_field %}  <!-- 导入宏 -->
+
+{% block styles %}
+    {{ static_file('css','css/bootstrap.min.css') }}
+{% endblock styles %}
+
+{% block content %}
+<!--
+Function: 演示文件(图片)上传, 多个图片
+Chapter: 4.4.4_4
+-->
+<form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    {{ form_field(form.description, "BEFORE") }}<br>
+    {{ form_field(form.images, "BEFORE") }}<br>
+    {{ form.submit(class='btn btn-primary') }}<br>
+</form>
+
+{% endblock content %}

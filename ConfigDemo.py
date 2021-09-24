@@ -24,5 +24,8 @@ class ConfigDemo():
         # 上传图片文件后保存的路径
         self.app.config['UPLOAD_PATH'] = os.path.join(self.app.root_path, 'uploadedimages')
 
+        # 设置允许上传的文件类型的扩展名, Chapter: 4.4.4_4
+        self.app.config['ALLOWED_EXTENSIONS'] = ['png', 'jpg', 'jpeg', 'gif']
+
 
 

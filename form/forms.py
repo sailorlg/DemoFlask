@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 # 为了文件上传我们使用扩展Flask-WTF提供的FileField类, 他继承自WTForms提供的上传字段FileField, 添加了Flask的继承
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, MultipleFileField
 from wtforms.validators import DataRequired, Length, ValidationError
 
 
@@ -95,5 +95,17 @@ class UploadSingleImageForm(FlaskForm):
     Chapter: 4.4.4_1~3
     """
     description = StringField("Introduce")
-    image = FileField("Upload Beautify", validators=[FileRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    image = FileField("Upload Beautify",
+                      validators=[FileRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
     submit = SubmitField("GO")
+
+
+class UploadMultiImageForm(MyBaseForm):
+    """
+    Function:演示上传多个图片文件
+    Chapter: 4.4.4_4
+    """
+    description = StringField("Plz introduce")
+    images = MultipleFileField('UploadMoreImages',
+                               validators=[DataRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    submit = SubmitField("GoGo")

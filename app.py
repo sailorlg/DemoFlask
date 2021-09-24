@@ -234,10 +234,15 @@ from jinja2.utils import generate_lorem_ipsum, escape
 from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, \
     render_template, Markup, flash, send_from_directory
 from urllib.parse import urlparse, urljoin
+# Chapter: 4.4.4_4
+from flask_wtf.csrf import validate_csrf  # 验证CSRF令牌
+from wtforms import ValidationError
+
 import click
 import uuid
 
-from form.forms import LoginForm, AskAgeForm, AskNameForm, UploadSingleImageForm  # 导入form文件夹下form.py文件的LoginForm类
+from form.forms import LoginForm, AskAgeForm, AskNameForm, UploadSingleImageForm, \
+    UploadMultiImageForm  # 导入form文件夹下form.py文件的LoginForm类
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
@@ -465,4 +470,68 @@ def show_images():
     """
     print("app.py => show_images : running")
     image_name = session['image_file_name']  # 从session中去除图片文件名
-    return render_template('show_images.html', filename=image_name)
+    return render_template('show_images.html', filename=image_name, number=1)
+
+
+@app.route("/uploadmoreimages", methods=['GET', 'POST'])
+def upload_more_image():
+    """
+    Function:演示上传文件(图片),多个文件
+    Chapter: 4.4.4_4
+    :return:
+    """
+    form = UploadMultiImageForm()
+    if request.method == "POST":
+        filenames = []
+
+        # 验证CSRF令牌
+        # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+        try:
+            validate_csrf(form.csrf_token.data)
+        except ValidationError:
+            flash("CSRF token error")
+            return redirect(url_for("more_images"))
+
+        # 检查文件是否存在
+        # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+        # "images"是表单字段名
+        if 'images' not in request.files:
+            flash("This filed is required!")
+            return redirect(url_for("more_images"))
+        print(request.files)
+        for a_image in request.files.getlist('images'):
+            # 检查文件类型
+            if a_image and allowed_file(a_image.filename):
+                imagename = random_filename(a_image.filename)
+                a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                filenames.append(imagename)
+            else:
+                flash("Invalid file type!")
+                return redirect(url_for("more_images"))
+        flash("Images upload success!")
+        session['image_names'] = filenames
+        return redirect(url_for("more_images"))
+
+    return render_template("upload_more_images.html", form=form)
+
+@app.route("/moreimages")
+def more_images():
+    """
+    Function: 显示多个图片
+    Chapger: 4.4.4_4
+    :return:
+    """
+    print("app.py => more_images : running")
+    image_name = session['image_names']  # 从session中去除图片文件名
+    print("app.py => more_images => image_name : " + str(image_name))
+    return render_template('show_images.html', filename=image_name, number=len(image_name))
+
+
+
+def allowed_file(file_name):
+    """
+    Function:验证文件类型, 文件名中有".", 并且扩展名是在配置文件中指定的扩展名
+    :param file_name:
+    :return:
+    """
+    return '.' in file_name and file_name.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']

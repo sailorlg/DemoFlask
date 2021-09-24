@@ -2,5 +2,16 @@
 Function:显示在upload_one_image.html上传的图片
 Chapter: 4.4.4_1~3
 -->
-
-<img  width="450" src="{{ url_for('get_file', filename=filename) }}">
+<!--
+Function: 在进行4.4.4_4章的演示的时候,把代码修改为既可以显示一个图片, 也可以显示多个图片, 在没有图片的时候也能进行提示
+Chapter: 4.4.4_4
+-->
+{% if number == 1 %}
+    <img  width="450" src="{{ url_for('get_file', filename=filename) }}">
+{% elif number == 0 %}
+    <H1>No Images</H1>
+{% else %}
+    {% for a_image in filename %}
+        <img  width="450" src="{{ url_for('get_file', filename=a_image) }}"><br>
+    {% endfor %}}
+{% endif %}
