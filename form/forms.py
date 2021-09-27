@@ -7,6 +7,9 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, MultipleFileField
 from wtforms.validators import DataRequired, Length, ValidationError
 
+# 从flask-ckeditor包导入
+# Chapter: 4.4.5
+from flask_ckeditor import CKEditorField
 
 class MyBaseForm(FlaskForm):
     class Meta:
@@ -103,9 +106,23 @@ class UploadSingleImageForm(FlaskForm):
 class UploadMultiImageForm(MyBaseForm):
     """
     Function:演示上传多个图片文件
-    Chapter: 4.4.4_4
+             富文本编辑功能增加
+             单个页面多个表单的演示
+    Chapter: 4.4.4_4, 4.4.5, 4.4.6
     """
     description = StringField("Plz introduce")
+    detail = CKEditorField("Detail Description", validators=[DataRequired()])  # 富文本编辑器字段, Chapter 4.4.5
     images = MultipleFileField('UploadMoreImages',
                                validators=[DataRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    submit = SubmitField("GoGo")
+    submitimage = SubmitField("GoGo")
+    tempsubmit = SubmitField("TempSave")  # 多个提交按钮演示, Chapter 4.4.6
+
+
+class IntroducePictureForm(MyBaseForm):
+    """
+    Function: 单个页面多个表单的演示
+    Chapter: 4.4.7
+    """
+    modelname = StringField("ModelName")
+    modelpic = MultipleFileField("UploadPic", validators=[DataRequired(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    submitmodel = SubmitField("Save")

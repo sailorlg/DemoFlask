@@ -238,15 +238,18 @@ from urllib.parse import urlparse, urljoin
 from flask_wtf.csrf import validate_csrf  # 验证CSRF令牌
 from wtforms import ValidationError
 
+from flask_ckeditor import CKEditor  # 传入CDEditor, Chapter 4.4.5
+
 import click
 import uuid
 
 from form.forms import LoginForm, AskAgeForm, AskNameForm, UploadSingleImageForm, \
-    UploadMultiImageForm  # 导入form文件夹下form.py文件的LoginForm类
+    UploadMultiImageForm, IntroducePictureForm  # 导入form文件夹下form.py文件的LoginForm类
 from ConfigDemo import ConfigDemo
 
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
+ckeditor = CKEditor(app)  # 实例化Flask-CKEditor提供的CKEditor类
 
 @app.route("/post")
 def show_post():
@@ -477,42 +480,55 @@ def show_images():
 def upload_more_image():
     """
     Function:演示上传文件(图片),多个文件
-    Chapter: 4.4.4_4
+             演示富文本编辑器
+             单个表单多个提交按钮
+    Chapter: 4.4.4_4, 4.4.5, 4.4.6
     :return:
     """
     form = UploadMultiImageForm()
     if request.method == "POST":
-        filenames = []
+        if form.tempsubmit.data:  # 点击了临时提交按钮
+            print("app.py => upload_more_image : " + "接收到临时提交")
+            flash("Got Temp submitted content!")
+            return redirect(url_for("index_view"))
+        if form.submit.data:  # 点击了提交按钮
+            filenames = []
 
-        # 验证CSRF令牌
-        # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
-        try:
-            validate_csrf(form.csrf_token.data)
-        except ValidationError:
-            flash("CSRF token error")
-            return redirect(url_for("more_images"))
-
-        # 检查文件是否存在
-        # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
-        # "images"是表单字段名
-        if 'images' not in request.files:
-            flash("This filed is required!")
-            return redirect(url_for("more_images"))
-        print(request.files)
-        for a_image in request.files.getlist('images'):
-            # 检查文件类型
-            if a_image and allowed_file(a_image.filename):
-                imagename = random_filename(a_image.filename)
-                a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
-                filenames.append(imagename)
-            else:
-                flash("Invalid file type!")
+            # 验证CSRF令牌
+            # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+            try:
+                validate_csrf(form.csrf_token.data)
+            except ValidationError:
+                flash("CSRF token error")
                 return redirect(url_for("more_images"))
-        flash("Images upload success!")
-        session['image_names'] = filenames
-        return redirect(url_for("more_images"))
+
+            # 显示富文本上传的内容
+            richtext = form.detail.data
+            print(richtext)
+
+            # 检查文件是否存在
+            # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+            # "images"是表单字段名
+            if 'images' not in request.files:
+                flash("This filed is required!")
+                return redirect(url_for("more_images"))
+
+            # 循环处理图片文件
+            for a_image in request.files.getlist('images'):
+                # 检查文件类型
+                if a_image and allowed_file(a_image.filename):
+                    imagename = random_filename(a_image.filename)
+                    a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                    filenames.append(imagename)
+                else:
+                    flash("Invalid file type!")
+                    return redirect(url_for("more_images"))
+            flash("Images upload success!")
+            session['image_names'] = filenames
+            return redirect(url_for("more_images"))
 
     return render_template("upload_more_images.html", form=form)
+
 
 @app.route("/moreimages")
 def more_images():
@@ -527,7 +543,6 @@ def more_images():
     return render_template('show_images.html', filename=image_name, number=len(image_name))
 
 
-
 def allowed_file(file_name):
     """
     Function:验证文件类型, 文件名中有".", 并且扩展名是在配置文件中指定的扩展名
@@ -535,3 +550,217 @@ def allowed_file(file_name):
     :return:
     """
     return '.' in file_name and file_name.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
+@app.route("/multiform", methods=['GET', 'POST'])
+def one_page_two_forms():
+    """
+    功能: 演示一个页面处理多个表单的功能,一个视图
+    chapter: 4.4.7_1
+    :return:
+    """
+    imageform = UploadMultiImageForm()
+    modelform = IntroducePictureForm()
+
+    if imageform.submitimage.data:  # UploadMultiImageForm被提交
+        if imageform.tempsubmit.data:  # 点击了临时提交按钮
+            flash("Got UploadMultiImageForm Temp submitted content!")
+            return redirect(url_for("index_view"))
+        if imageform.submitimage.data:  # 点击了提交按钮
+            filenames = []
+
+            # 验证CSRF令牌
+            # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+            try:
+                validate_csrf(imageform.csrf_token.data)
+            except ValidationError:
+                flash("CSRF token error")
+                return redirect(url_for("more_images"))
+
+            # 显示富文本上传的内容
+            richtext = imageform.detail.data
+            print("app.py => one_page_two_forms => richtext " + richtext)
+
+            # 检查文件是否存在
+            # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+            # "images"是表单字段名
+            if len(imageform.images.data) <= 0:
+                flash("This filed is required!")
+                return redirect(url_for("more_images"))
+
+            print("app.py => one_page_two_forms => imageform : ", request.files.getlist('images'))
+
+            # 循环处理图片文件
+            for a_image in request.files.getlist('images'):
+                # 检查文件类型
+                if a_image and allowed_file(a_image.filename):
+                    imagename = random_filename(a_image.filename)
+                    a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                    filenames.append(imagename)
+                else:
+                    flash("Invalid file type!")
+                    return redirect(url_for("more_images"))
+            flash("Images upload success!")
+            session['image_names'] = filenames
+            return redirect(url_for("more_images"))
+
+    if modelform.submitmodel.data:  # IntroducePictureForm被提交, 点击了提交按钮
+
+        modile_pic_list = []
+
+        # 验证CSRF令牌
+        # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+        try:
+            validate_csrf(modelform.csrf_token.data)
+        except ValidationError:
+            flash("CSRF token error")
+            return redirect(url_for("more_images"))
+
+        print("app.py => one_page_two_forms => modelform : " + str(modelform))
+
+        print("app.py => one_page_two_forms => modelpic : ", request.files.getlist('modelpic'))
+
+        # 检查文件是否存在
+        # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+        # "images"是表单字段名
+        print("app.py => one_page_two_forms => modelform.data :", modelform.modelpic.data)
+
+        if len(modelform.modelpic.data) <= 0:
+            flash("This filed is required!")
+            return redirect(url_for("more_images"))
+
+        # 循环处理图片文件
+        for a_image in request.files.getlist('modelpic'):
+            # 检查文件类型
+            if a_image and allowed_file(a_image.filename):
+                print("app.py => one_page_two_forms => modelform => a_image.filename : " + a_image.filename)
+                imagename = random_filename(a_image.filename)
+                a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                modile_pic_list.append(imagename)
+            else:
+                flash("Invalid file type!")
+                return redirect(url_for("more_images"))
+        flash("Images upload success!")
+        print("app.py => one_page_two_forms => modile_pic_list : ", modile_pic_list)
+        session['image_names'] = modile_pic_list
+        return redirect(url_for("more_images"))
+    return render_template("onepage_moreforms_1.html", imageform=imageform, modelform=modelform)
+
+
+@app.route("/multiformview", methods=['GET'])
+def more_form_more_vew_display():
+    """
+    功能: 演示一个页面处理多个表单的功能, 多个视图
+         处理GET请求,进行显示
+    chapter: 4.4.7_2
+    :return:
+    """
+
+    imageform = UploadMultiImageForm()
+    modelform = IntroducePictureForm()
+    return render_template("onepage_morefors_2.html", imageform=imageform, modelform=modelform)
+
+
+@app.route("/multiformview-pic", methods=['POST'])
+def more_form_more_vew_pictures():
+    """
+    功能: 演示一个页面处理多个表单的功能, 多个视图
+         UploadMultiImageForm的POST请求
+    :return:
+    """
+    imageform = UploadMultiImageForm()
+    modelform = IntroducePictureForm()
+
+    if imageform.validate_on_submit():  # UploadMultiImageForm被提交
+        if imageform.tempsubmit.data:  # 点击了临时提交按钮
+            flash("Got UploadMultiImageForm Temp submitted content!")
+            return redirect(url_for("index_view"))
+        if imageform.submitimage.data:  # 点击了提交按钮
+            filenames = []
+
+            # 验证CSRF令牌
+            # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+            try:
+                validate_csrf(imageform.csrf_token.data)
+            except ValidationError:
+                flash("CSRF token error")
+                return redirect(url_for("more_images"))
+
+            # 显示富文本上传的内容
+            richtext = imageform.detail.data
+            print("app.py => one_page_two_forms => richtext " + richtext)
+
+            # 检查文件是否存在
+            # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+            # "images"是表单字段名
+            if len(imageform.images.data) <= 0:
+                flash("This filed is required!")
+                return redirect(url_for("more_images"))
+
+            print("app.py => one_page_two_forms => imageform : ", request.files.getlist('images'))
+
+            # 循环处理图片文件
+            for a_image in request.files.getlist('images'):
+                # 检查文件类型
+                if a_image and allowed_file(a_image.filename):
+                    imagename = random_filename(a_image.filename)
+                    a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                    filenames.append(imagename)
+                else:
+                    flash("Invalid file type!")
+                    return redirect(url_for("more_images"))
+            flash("Images upload success!")
+            session['image_names'] = filenames
+            return redirect(url_for("more_images"))
+
+
+@app.route("/multiformview-model", methods=['POST'])
+def more_form_more_vew_models():
+    """
+    功能: 演示一个页面处理多个表单的功能, 多个视图
+         IntroducePictureForm的POST请求
+    :return:
+    """
+    imageform = UploadMultiImageForm()
+    modelform = IntroducePictureForm()
+
+    if modelform.validate_on_submit():  # IntroducePictureForm被提交, 点击了提交按钮
+
+        modile_pic_list = []
+
+        # 验证CSRF令牌
+        # 传入表单中csrf_token隐藏字段的值, 如果抛出wtforms.ValidationError异常,则表明验证没有通过
+        try:
+            validate_csrf(modelform.csrf_token.data)
+        except ValidationError:
+            flash("CSRF token error")
+            return redirect(url_for("more_images"))
+
+        print("app.py => one_page_two_forms => modelform : " + str(modelform))
+
+        print("app.py => one_page_two_forms => modelpic : ", request.files.getlist('modelpic'))
+
+        # 检查文件是否存在
+        # 确保字段中包含文件数据, 如果用户没有选择文件就提交表单则request.files为空
+        # "images"是表单字段名
+        print("app.py => one_page_two_forms => modelform.data :", modelform.modelpic.data)
+
+        if len(modelform.modelpic.data) <= 0:
+            flash("This filed is required!")
+            return redirect(url_for("more_images"))
+
+        # 循环处理图片文件
+        for a_image in request.files.getlist('modelpic'):
+            # 检查文件类型
+            if a_image and allowed_file(a_image.filename):
+                print("app.py => one_page_two_forms => modelform => a_image.filename : " + a_image.filename)
+                imagename = random_filename(a_image.filename)
+                a_image.save(os.path.join(app.config['UPLOAD_PATH'], imagename))
+                modile_pic_list.append(imagename)
+            else:
+                flash("Invalid file type!")
+                return redirect(url_for("more_images"))
+        flash("Images upload success!")
+        print("app.py => one_page_two_forms => modile_pic_list : ", modile_pic_list)
+        session['image_names'] = modile_pic_list
+        return redirect(url_for("more_images"))
