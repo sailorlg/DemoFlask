@@ -18,3 +18,7 @@ from ConfigDemo import ConfigDemo
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
 ckeditor = CKEditor(app)  # 实例化Flask-CKEditor提供的CKEditor类
+
+@app.route("/")
+def index_view():
+    return render_template("index.html")
