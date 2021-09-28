@@ -27,5 +27,14 @@ class ConfigDemo():
         # 设置允许上传的文件类型的扩展名, Chapter: 4.4.4_4
         self.app.config['ALLOWED_EXTENSIONS'] = ['png', 'jpg', 'jpeg', 'gif']
 
+        # 配置数据库URI
+        # Chapter 5.3.1
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+            'DATABASE_URL', 'sqlite:///' + os.path.join(self.app.root_path, 'db', 'demosqlite3.db'))
+
+        # 修补在进行flask命令时出现FSADeprecationWarning的问题
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+
+
 
 
