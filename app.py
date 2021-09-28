@@ -82,3 +82,13 @@ def write_note():
         flash("Saved Successfully!")
         return redirect(url_for("index_view"))
     return render_template("write_note.html", form=form)
+
+
+@app.route("/readnote", methods=['GET', 'POST'])
+def read_note():
+    """
+    Function: 显示从数据库读取笔记的内容后显示在页面
+    :return:
+    """
+    notes = NoteList.query.all()
+    return render_template("read_note.html", notes=notes)
