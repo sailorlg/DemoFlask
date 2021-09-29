@@ -1,3 +1,8 @@
+<!--
+Function: 演示从页面读入提交的数据并保存到数据库的过程
+          读入笔记内容的模板
+    Chapter: 5.4.2_1~2
+-->
 {% extends 'base.html' %}
 {% from 'macros.html' import qux %}
 {% from 'macros.html' import form_field %}
@@ -8,7 +13,18 @@
 
 {% for a_note in notes %}
     <div class="note">
-        <p>{{ a_note.note_id }} - {{ a_note.note_body }}</p>
+        <p>
+            {{ a_note.note_id }} - {{ a_note.note_body }}
+            <a class='btn' href="{{ url_for('edit_note', note_id=a_note.note_id )}}">Edit</a> <!--增加修改按钮, Chapter 5.4.2_3 -->
+             <!--
+             增加删除按钮
+             Chapter 5.4.2_4
+             -->
+            <form method="post" action="{{ url_for('delete_note', note_id=a_note.note_id) }}">
+                {{ form.csrf_token }}
+                {{ form.submit(class='btn') }}
+            </form>
+        </p>
     </div>
 {% endfor %}
 

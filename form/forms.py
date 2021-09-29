@@ -26,6 +26,24 @@ class NewNoteListForm(MyBaseForm):
     """
     Function: 演示从页面读入提交的数据并保存到数据库的过程
               创建表单
+    Chapter: 5.4.2_1~2
     """
     notebody = TextAreaField("Note", validators=[DataRequired()])
     submit = SubmitField("Save")
+
+
+class EditNoteForm(NewNoteListForm):
+    """
+    Function:演示修改一个已经显示在页面中的数据
+    Chapter: 5.4.2_3
+    """
+    submit = SubmitField("Update")
+
+
+class DeleteNoteForm(MyBaseForm):
+    """
+    Function:演示删除一个已经显示在页面中的数据
+    Chapter: 5.4.2_4
+    说明: 这里不能继承NewNoteListForm, 因为提交删除的时候, notebody会为空, 无法满足"validators=[DataRequired()]"的条件
+    """
+    submit = SubmitField("Delete")

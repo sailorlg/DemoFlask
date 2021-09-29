@@ -17,7 +17,7 @@ import uuid
 from flask_sqlalchemy import SQLAlchemy
 
 from ConfigDemo import ConfigDemo
-from form.forms import NewNoteListForm
+from form.forms import NewNoteListForm, EditNoteForm, DeleteNoteForm
 
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
@@ -59,7 +59,7 @@ def index_view():
     """
     Function: 演示从页面读入提交的数据并保存到数据库的过程
               这是首页面, 添加链接能跳转到写笔记页面
-    Chapter: 5.4.2_1
+    Chapter: 5.4.2_1~2
     :return:
     """
     print("app.py => index_view => db : ", db)
@@ -70,6 +70,7 @@ def write_note():
     """
     Function: 演示从页面读入提交的数据并保存到数据库的过程
               创建显示和处理写笔记页面的视图
+    Chapter: 5.4.2_1~2
     :return:
     """
     form = NewNoteListForm()
@@ -88,7 +89,51 @@ def write_note():
 def read_note():
     """
     Function: 显示从数据库读取笔记的内容后显示在页面
+    Chapter: 5.4.2_1~2
     :return:
     """
     notes = NoteList.query.all()
-    return render_template("read_note.html", notes=notes)
+    deleteform = DeleteNoteForm()
+    # return render_template("read_note.html", notes=notes)  # 在写Chapter 5.4.2_4, 删除功能演示的时候, 修改为下面的代码
+    return render_template("read_note.html", notes=notes, form=deleteform)
+
+
+@app.route("/editnote/<int:note_id>", methods=['GET', 'POST'])
+def edit_note(note_id):
+    """
+    Function:演示修改一个已经显示在页面中的数据
+    Chapter: 5.4.2_3
+    :param note_id:
+    :return:
+    """
+    form = EditNoteForm()
+    note = NoteList.query.get(note_id)
+
+    if form.validate_on_submit():
+         note.note_body = form.notebody.data
+         db.session.commit()
+         flash("Your note is updated!")
+         return redirect(url_for("read_note"))
+
+    form.notebody.data = note.note_body
+    return render_template("edit_note.html", form=form)
+
+
+@app.route("/deletenote/<int:note_id>", methods=['POST'])
+def delete_note(note_id):
+    """
+    Function:演示修改一个已经显示在页面中的数据
+    Chapter: 5.4.2_4
+    :param note_id:
+    :return:
+    """
+    form = DeleteNoteForm()
+    if form.validate_on_submit():
+        print("app.py => delete_note : running......")
+        note = NoteList.query.get(note_id)  # 获取对应的记录
+        db.session.delete(note)  # 删除记录
+        db.session.commit()  # 提交修改
+        flash("Your note is deleted!")
+    else:
+        abort(400)
+    return redirect(url_for("read_note"))
