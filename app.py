@@ -19,6 +19,8 @@ from flask_sqlalchemy import SQLAlchemy
 from ConfigDemo import ConfigDemo
 from form.forms import NewNoteListForm, EditNoteForm, DeleteNoteForm
 
+from flask_migrate import Migrate
+
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
 ckeditor = CKEditor(app)  # 实例化Flask-CKEditor提供的CKEditor类
@@ -26,6 +28,10 @@ ckeditor = CKEditor(app)  # 实例化Flask-CKEditor提供的CKEditor类
 # 实例化Flask-SQLAlchemy提供的SQLAlchemy类, 传入程序实例,已完成扩展的初始化
 # Chapter 5.3
 db = SQLAlchemy(app)
+
+# 实例化Migrate类
+# Chapter 5.6.2
+migrate = Migrate(app, db)
 
 
 @app.cli.command()
@@ -38,13 +44,196 @@ def initdb():
     click.echo("Initialized database.")
 
 
+@app.shell_context_processor
+def make_shell_context():
+    """
+    Function: 为了在flask shell中, 不必import也能用python对象, 把需要的对象注册到上下文环境中
+    Chapter: 5.5.1
+    :return:
+    """
+    v_dict = dict(db=db, NoteList=NoteList, AuthorList=AuthorList,
+                  ArticleList=ArticleList, Book=Book, Writer=Writer, Singer=Singer, Song=Song,
+                  Citizen=Citizen, City=City, Country=Country, Capital=Capital, Student=Student,
+                  Teacher=Teacher, Post=Post, Comment=Comment, Draft=Draft)
+    return v_dict
+
+
 class NoteList(db.Model):
     """
     Function: 定义一个数据库表模型
     Chapter: 5.3.2
     """
     note_id = db.Column(db.Integer, primary_key=True)
+    note_title = db.Column(db.String(100))
     note_body = db.Column(db.Text)
+
+
+class AuthorList(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), unique=True)
+    phone = db.Column(db.String(20))
+    articles = db.relationship('ArticleList')
+
+
+class ArticleList(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(50), index=True)
+    body = db.Column(db.Text)
+    author_id = db.Column(db.Integer, db.ForeignKey('author_list.id'))
+
+
+class Writer(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    books = db.relationship('Book', back_populates='writer')
+
+
+class Book(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), index=True)
+    writer_id = db.Column(db.Integer, db.ForeignKey("writer.id"))
+    writer = db.relationship('Writer', back_populates='books')
+
+
+class Singer(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    songs = db.relationship('Song', backref='singer')
+
+class Song(db.Model):
+    """
+    Function: 定义一个数据库表模型
+    Chapter: 5.5.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+    singer_id = db.Column(db.Integer, db.ForeignKey("singer.id"))
+
+
+class Citizen(db.Model):
+    """
+    Function: 定义一个多对一关系的模型,
+              市民, "多"的一侧
+    Chapter: 5.5.3
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    city_id = db.Column(db.Integer, db.ForeignKey('city.id'))  # 创建外键
+    city = db.relationship('City')  # 定义关系属性, 获取城市对象
+
+
+class City(db.Model):
+    """
+    Function: 定义多对一关系的模型
+              城市, "一"的一侧
+    Chapter: 5.5.3
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+
+
+class Country(db.Model):
+    """
+    Function: 定义一对一模型
+    Chapter: 5.5.4
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    capital = db.relationship('Capital', back_populates='country', uselist=False)
+
+
+class Capital(db.Model):
+    """
+    Function: 定义一对一关系
+    Chapter: 5.5.4
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
+    country = db.relationship('Country', back_populates='capital')
+
+
+# Student和Teacher的关系表
+# Chapter: 5.5.5
+association_table = db.Table('association', db.Column('student_id', db.Integer, db.ForeignKey('student.id')),
+                             db.Column('teacher_id', db.Integer, db.ForeignKey('teacher.id')))
+
+
+class Student(db.Model):
+    """
+    Function: 定义多对多关系
+    Chapter: 5.5.5
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    grade = db.Column(db.String(20))
+    teachers = db.relationship('Teacher', secondary=association_table, back_populates='students')
+
+
+class Teacher(db.Model):
+    """
+    Function: 定义多对多关系
+    Chapter: 5.5.5
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    office = db.Column(db.String(20))
+    students = db.relationship('Student', secondary=association_table, back_populates='teachers')
+
+
+class Post(db.Model):
+    """
+    Function:演示数据库的级联操作
+             存储文章(帖子)的模型
+    Chapter: 5.7.1
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(50))
+    body = db.Column(db.Text)
+    comments = db.relationship('Comment', back_populates='post', cascade='save-update, merge, delete')
+
+
+class Comment(db.Model):
+    """
+    Function:演示数据库的级联操作
+             存储评论的模型
+    Chapter: 5.7.1
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    post = db.relationship('Post', back_populates='comments')
+
+
+class Draft(db.Model):
+    """
+    Function:演示事件监听
+    Chapter: 5.7.2
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    edit_time = db.Column(db.Integer, default=0)
+
 
 
 
@@ -64,6 +253,7 @@ def index_view():
     """
     print("app.py => index_view => db : ", db)
     return render_template("index.html")
+
 
 @app.route("/writenote", methods=['GET', 'POST'])
 def write_note():
@@ -137,3 +327,34 @@ def delete_note(note_id):
     else:
         abort(400)
     return redirect(url_for("read_note"))
+
+
+# @db.event.listens_for(Draft.body, 'set')
+# def increment_edit_time(target, value, oldvalue, initiator):
+#     """
+#     Function:在listens_for装饰器分别传入Draft.body和set作为target和identifier参数的值
+#              监听函数接受所有set()事件方法接收的参数, 其中的targete参数表示触发时间的模型类实例,
+#              使用target.edit_time即可获取我们需要叠加的字段.
+#              其他的参数也需要照常写出, 虽然这里没有用到.
+#     :param target:
+#     :param value: 被设置的值
+#     :param oldvalue: 被取代的旧值
+#     :param initiator:
+#     :return:
+#     Chapter: 5.7.2_1
+#     """
+#     if target.edit_time is not None:
+#         target.edit_time += 1
+
+
+@db.event.listens_for(Draft.body, 'set', named=True)
+def increament_edit_time(**kwargs):
+    """
+    Function: 需要现在装饰器中把参数name设置为True, 可以在监听函数中接收**kwargs作为参数.
+              然后在函数中可以使用参数名作为键来从kwargs字典获取对应的参数值.
+    :param kwargs:
+    :return:
+    Chapter: 5.7.2_2
+    """
+    if kwargs['target'].edit_time is not None:
+        kwargs['target'].edit_time += 1
