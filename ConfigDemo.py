@@ -30,7 +30,7 @@ class ConfigDemo():
         # 配置数据库URI
         # Chapter 5.3.1
         self.app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-            'DATABASE_URL', 'sqlite:///' + os.path.join(self.app.root_path, 'db', 'demosqlite3.db'))
+            'DATABASE_URL', 'sqlite:///' + os.path.join(self.app.root_path, 'db', 'c6demosqlite3.db'))
 
         # 修补在进行flask命令时出现FSADeprecationWarning的问题
         self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
