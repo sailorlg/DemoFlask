@@ -92,7 +92,7 @@ def send_mail(subject, to, body):
     :param to:
     :param body:
     :return:
-    Chapter: 6.1.3
+    Chapter: 6.1.3, 6.3.2
     """
     if subject is None:
         mail_subject = 'Test'
@@ -111,6 +111,7 @@ def send_mail(subject, to, body):
 
     print("app.py => send_mail => mail_to : ", mail_to)
     mail_message = Message(mail_subject, mail_to, mail_body)
+    mail_message.html = render_template('email/emailbase.html', name=mail_subject, content=mail_body)
     mail.send(mail_message)
 
 
