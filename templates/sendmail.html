@@ -1,0 +1,28 @@
+<!--
+Function:发送邮件的页面
+Chapter : 6.1.3
+-->
+
+{% extends 'base.html' %}
+{% from 'macros.html' import qux, static_file, form_field %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .foo {
+        color: red;
+    }
+</style>
+{% endblock styles %}
+
+{% block content %}
+<form method="post">
+    {{ form.csrf_token }}
+    {{ form_field(form.address, "BEFORE") }}
+    {{ form_field(form.mail_title, "BEFORE") }}
+    {{ form_field(form.mail_body, "BEFORE") }}
+    {{ form.submit }}
+</form>
+
+
+{% endblock content %}

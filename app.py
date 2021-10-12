@@ -18,8 +18,14 @@ from flask_sqlalchemy import SQLAlchemy
 
 from ConfigDemo import ConfigDemo
 
+# 发送邮件的表单
+# Chapter 6.1.3
+from form.forms import SendMailForm
 
 from flask_migrate import Migrate
+
+# 导入Flask-Mail包, Flask-Mail包装了Python标准库中的smtplib包, 简化了在Flask中发送电子邮件的过程
+from flask_mail import Mail, Message
 
 app = Flask(__name__)  # 创建FlaskApp
 app = ConfigDemo(app).app  # 读入全局配置变量
@@ -33,6 +39,10 @@ db = SQLAlchemy(app)
 # Chapter 5.6.2
 migrate = Migrate(app, db)
 
+# 实例化Flask-Mail提供的Mail类并传入程序实例以完成初始化
+mail = Mail(app)
+
+################################################################################
 
 @app.cli.command()
 def initdb():
@@ -57,9 +67,6 @@ def initdb():
 
 
 
-
-
-
 #######################################################################################################
 
 
@@ -73,6 +80,59 @@ def index_view():
     Chapter: 5.4.2_1~2
     :return:
     """
+    # send_mail(None, None, None)
     print("app.py => index_view => db : ", db)
     return render_template("index.html")
 
+
+def send_mail(subject, to, body):
+    """
+    Function:发送邮件
+    :param subject:
+    :param to:
+    :param body:
+    :return:
+    Chapter: 6.1.3
+    """
+    if subject is None:
+        mail_subject = 'Test'
+    else:
+        mail_subject = subject
+
+    if to is None:
+        mail_to = ['guanghai.li@samsungimc.com']  # 这里需要用列表类型.
+    else:
+        mail_to = to
+
+    if body is None:
+        mail_body = 'TEST From Flask Demo'
+    else:
+        mail_body = body
+
+    print("app.py => send_mail => mail_to : ", mail_to)
+    mail_message = Message(mail_subject, mail_to, mail_body)
+    mail.send(mail_message)
+
+
+@app.route("/sendmail", methods=['GET', 'POST'])
+def send_mail_page():
+    """
+    Function:发送邮件
+    :return:
+    """
+    form = SendMailForm()
+
+    if form.validate_on_submit():
+        print("app.py => send_mail_page => form.address.data : ", form.address.data)
+        mail_address = []
+        mail_address.append(str(form.address.data))
+        print("app.py => send_mail_page => mail_address : ", mail_address)
+
+        mail_subject = form.mail_title.data
+        mail_content = form.mail_body.data
+
+        send_mail(mail_subject, mail_address, mail_content)
+        flash("Mail sent successfully!")
+        return redirect(url_for("index_view"))  # 返回到首页
+
+    return render_template("sendmail.html", form=form)

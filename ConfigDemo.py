@@ -8,6 +8,8 @@ class ConfigDemo():
     """这个类是用于配置Flask的全局变量"""
     def __init__(self, p_app):
         self.app = p_app
+        self.private_setting = {}
+        self.read_private_keys()
         self.set_config()
 
     def set_config(self):
@@ -35,6 +37,22 @@ class ConfigDemo():
         # 修补在进行flask命令时出现FSADeprecationWarning的问题
         self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
+        # 设置邮件服务器配置
+        # Chapter 6.1.1
+        self.app.config['MAIL_SERVER'] = 'smtp.163.com'  # 发件服务器地址
+        self.app.config['MAIL_USERNAME'] = 'sailorlg@163.com'  # 发信服务器的用户名
+        self.app.config['MAIL_PASSWORD'] = self.private_setting['MAIL']
+        self.app.config['MAIL_DEFAULT_SENDER'] = ('sailorlg', 'sailorlg@163.com')
 
 
+    def read_private_keys(self):
+        """
+        Function:读取私密内容
+        :return:
+        Chapter: 6.1.1
+        """
+        with open('cenv/settings') as a_file:
+            self.private_setting['MAIL'] = a_file.read()
 
+        print("ConfigDemo.py => ConfigDemo => read_private_keys : self.private_setting['MAIL'] : ",
+              self.private_setting['MAIL'])

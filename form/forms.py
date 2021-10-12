@@ -21,3 +21,14 @@ class MyBaseForm(FlaskForm):
         """
         locals = ['zh']
 
+
+class SendMailForm(MyBaseForm):
+    """
+    Function: 创建发送邮件的页面
+              用于构建表单
+    Chapter: 6.1.3
+    """
+    address = StringField(label="Send mail to", validators=[DataRequired()])
+    mail_title = StringField(label='Mail subject', validators=[DataRequired()])
+    mail_body = StringField(label="Mail Content", validators=[DataRequired()])
+    submit = SubmitField("SendMail")
