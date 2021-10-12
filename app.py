@@ -1,5 +1,9 @@
 
 import os
+import click
+import uuid
+from threading import Thread
+
 from jinja2.utils import generate_lorem_ipsum, escape
 from flask import Flask, url_for, request, redirect, make_response, json, jsonify, session, abort, g, \
     render_template, Markup, flash, send_from_directory
@@ -9,9 +13,6 @@ from flask_wtf.csrf import validate_csrf  # 验证CSRF令牌
 from wtforms import ValidationError
 
 from flask_ckeditor import CKEditor  # 传入CDEditor, Chapter 4.4.5
-
-import click
-import uuid
 
 # 导入SQLAlchemy包, Chapter 5.3
 from flask_sqlalchemy import SQLAlchemy
@@ -112,7 +113,21 @@ def send_mail(subject, to, body):
     print("app.py => send_mail => mail_to : ", mail_to)
     mail_message = Message(mail_subject, mail_to, mail_body)
     mail_message.html = render_template('email/emailbase.html', name=mail_subject, content=mail_body)
-    mail.send(mail_message)
+
+    thr = Thread(target=__send_async_mail, args=[app, mail_message])
+    thr.start()
+    return thr
+
+
+def __send_async_mail(app, message):
+    """
+    Function: 用于异步发送邮件
+    :param app:
+    :param message:
+    :return:
+    """
+    with app.app_context():
+        mail.send(message)
 
 
 @app.route("/sendmail", methods=['GET', 'POST'])
